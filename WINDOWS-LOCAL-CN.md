@@ -223,6 +223,14 @@ WHISPER_BASE_URL=https://api.example.com/v1
 
 **解法**：本仓库已经回退到上游默认（`https://api.openai.com/v1`），如果你想切到自托管 / MiniMax / 其它 OpenAI 兼容端点，在 `.env` 里设置 `OPENAI_BASE_URL` / `OPENWHISPR_OPENAI_BASE_URL` 即可，不需要改源码。
 
+### 10. 启动时 `Port 5183 is already in use` 然后整个 dev 进程退出
+
+**症状**：双击 `start.bat` 之后黑窗一闪就没了，Vite 报 `error when starting dev server: Error: Port 5183 is already in use`。
+
+**原因**：上一次 `start.bat` 跑起来的 `node` / `electron` 进程还活着（按了窗口 X 只是关 UI，没杀后台），新的 dev 进程拿不到端口直接退出。
+
+**解法**：先双击 `stop.bat`（这个版本会按命令行的 `openwhispr` 关键字杀进程，并强制释放 5183 端口），再 `start.bat`。
+
 ---
 
 ## 模型选择

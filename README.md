@@ -125,20 +125,48 @@ We welcome contributions. Fork the repo, create a feature branch, and open a pul
 
 ---
 
-## 本仓库本地运行（Windows / 国内网络）
+## 本仓库：Windows + 国内网络本地运行版
 
-本 fork 在 [上游 main](https://github.com/OpenWhispr/openwhispr) 基础上做了 Windows + 国内网络场景下的修补，详见 **[WINDOWS-LOCAL-CN.md](./WINDOWS-LOCAL-CN.md)**。
+这是 [上游 OpenWhispr/openwhispr](https://github.com/OpenWhispr/openwhispr) 的本地化 fork。改动目的：让你在 **Windows + 国内网络** 环境下开箱即用，按一个全局热键就能把中文语音识别结果粘贴到任意输入框（微信 / VS Code / 浏览器 / Word …），默认不连云端。
 
-要点：
+完整教程（环境要求、安装、配置、模型选择、调试、卸载、构建安装包）见 **[WINDOWS-LOCAL-CN.md](./WINDOWS-LOCAL-CN.md)**。
+
+### 改动一览
+
+- 把 `huggingface.co` 全部替换为 `hf-mirror.com`，让模型下载在国内不挂
+- `predev:main` 步骤加 `|| true` 容错，避免网络抖动让 `npm run dev` 整体失败
+- 补全 `predev:main` 漏掉的 whisper.cpp 二进制下载（新增 `scripts/bootstrap-windows.js`）
+- 启动时自动下载 `ggml-base.bin`（142 MB），首次启动后即可离线 STT
+- 默认配置：本地 Whisper + 中文 + **F8** 热键（**不要用 `Ctrl+Alt+Space`，跟微信语音冲突**）
+- `bootstrap-windows.js` 每次启动把项目 `.env` 同步到 `%APPDATA%\OpenWhispr-development\.env`，避免两份配置打架
+- `.env` 里所有 API key 默认留空，clone 下来直接走本地 Whisper，不会偷偷连云端
+- `stop.bat` 改用 `scripts/stop-dev.ps1`，按命令行关键字杀进程并释放 Vite 端口 5183
+
+### 一键启动
+
+环境：Windows 10/11 + Node.js 24+ + VS 2022 Build Tools（含"使用 C++ 的桌面开发"）。
 
 ```cmd
-git clone <本仓库>
+git clone https://github.com/zhaosenlin12-creator/openwhispr.git
 cd openwhispr
 npm install
 start.bat
 ```
 
-- 一键启动：`start.bat`（含 MSVC 环境加载、`.env` 同步、whisper 二进制 + ggml-base 模型下载）
-- 一键停止：`stop.bat`
-- 默认走本地 Whisper 中文识别，按 **F8** 录到任意输入框（不要用 `Ctrl+Alt+Space`，跟微信语音冲突）
-- 模型/网络/热键等所有踩过的坑都在 `WINDOWS-LOCAL-CN.md` 列出，按章节查即可
+启动成功后会看到主窗口 + 任务栏托盘图标。在任意输入框里按 **F8 → 说话 → 再按 F8**，识别结果会粘贴到当前焦点窗口。
+
+**停止**：双击 `stop.bat`，或在托盘右键菜单选 Exit。**不要用窗口右上角的 X 关闭**，否则 dev 后台进程会留着，下一次 `start.bat` 会因为端口 5183 被占而起不来。
+
+### 踩坑速查（详细版在 WINDOWS-LOCAL-CN.md）
+
+1. **热键冲突** — `Ctrl+Alt+Space` 被微信语音抢走，换 `F8` 或 `F9`
+2. **`Port 5183 is already in use`** — 上一轮 dev 进程没清干净，先 `stop.bat` 再 `start.bat`
+3. **electron 下载卡死** — 项目里已预放好 `node_modules\electron\dist\`；新机器 clone 后设 `ELECTRON_MIRROR=https://npmmirror.com/mirrors/electron/`
+4. **HF 拉不到模型** — 已全量换 `hf-mirror.com`
+5. **MSVC 找不到** — `start.bat` 已 `call vcvars64.bat`；手动跑 dev 自己 call 一次
+6. **whisper-server 找不到** — `bootstrap-windows.js` 会自动下
+7. **改了 .env 不生效** — `stop.bat` 再 `start.bat` 重新同步到 `%APPDATA%`
+8. **401 login fail** — 本地 Whisper 默认走离线，**不会触发**；要走云端把 `OPENAI_BASE_URL` / `OPENWHISPR_OPENAI_BASE_URL` / `WHISPER_BASE_URL` 同时配齐
+9. **LevelDB 改了不生效** — 先 `stop.bat` 再改文件
+
+详细踩坑（含每条的根因 + 验证步骤）见 [WINDOWS-LOCAL-CN.md](./WINDOWS-LOCAL-CN.md)。

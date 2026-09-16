@@ -215,13 +215,13 @@ WHISPER_BASE_URL=https://api.example.com/v1
 
 **解法**：**先 stop.bat 再改文件**。改完后 start.bat。
 
-### 9. Vite 启动后页面显示 `__MINIMAX_URL__ is not defined`
+### 9. 改了 `src/config/constants.ts` 里 `DEFAULT_OPENAI_BASE` 后所有用户都连错端点
 
-**症状**：浏览器控制台报变量未定义。
+**症状**：本 fork 在改 OpenAI base URL 兜底值时，曾硬编码指向 `api.minimaxi.com` —— 只有这台机器的 fork 会这样，但合到 main 之后任何拉取者都会被强行指向那个端点。
 
-**原因**：Vite 8 的 `define` 配置在某些情况下不会替换 renderer 里的字面量。
+**原因**：hardcoded fallback 不会被用户的 `.env` 覆盖。
 
-**解法**：本仓库通过在 `src/config/constants.ts` 里硬编码 fallback 解决（默认指向本地 Whisper）。这条不会再触发。
+**解法**：本仓库已经回退到上游默认（`https://api.openai.com/v1`），如果你想切到自托管 / MiniMax / 其它 OpenAI 兼容端点，在 `.env` 里设置 `OPENAI_BASE_URL` / `OPENWHISPR_OPENAI_BASE_URL` 即可，不需要改源码。
 
 ---
 

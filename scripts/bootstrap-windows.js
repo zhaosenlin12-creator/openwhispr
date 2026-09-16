@@ -60,7 +60,7 @@ async function syncUserEnv() {
   }
   const merged = { ...project, ...existing };
   const out = Object.entries(merged)
-    .filter(([, v]) => v !== "" || existing && k in existing)
+    .filter(([k, v]) => v !== "" || k in existing)
     .map(([k, v]) => `${k}=${v}`)
     .join("\n");
   fs.writeFileSync(USER_ENV, out + "\n", "utf8");

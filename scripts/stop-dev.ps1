@@ -10,17 +10,18 @@ $ErrorActionPreference = "SilentlyContinue"
 
 # 1. Collect candidate PIDs from the running process table.
 $candidates = New-Object System.Collections.Generic.List[int]
-$procs = Get-CimInstance Win32_Process -Filter "Name in ('electron.exe','node.exe','vite.exe','conhost.exe','cmd.exe')"
+$procs = Get-CimInstance Win32_Process | Where-Object { $_.Name -match "^(electron|node|vite|conhost|cmd)\.exe$" }
 foreach ($p in $procs) {
   $exe  = [string]$p.ExecutablePath
   $cmd  = [string]$p.CommandLine
   $pid_ = [int]$p.ProcessId
+  $cwd  = [string]$p.CurrentDirectory
   if ($exe -like "*D:\kaifa_stu\gpt6\openwhispr*")            { $candidates.Add($pid_); continue }
   if ($exe -like "*\openwhispr*")                             { $candidates.Add($pid_); continue }
-  if ($cmd -match "openwhispr")                               { $candidates.Add($pid_); continue }
-  if ($cmd -match "open-whispr")                              { $candidates.Add($pid_); continue }
+  if ($cmd -match "openwhispr|open-whispr")                  { $candidates.Add($pid_); continue }
   if ($cmd -match "OpenWhispr")                               { $candidates.Add($pid_); continue }
   if ($cmd -match "concurrently.*open-whispr")                { $candidates.Add($pid_); continue }
+  if ($cwd -like "*D:\kaifa_stu\gpt6\openwhispr*")             { $candidates.Add($pid_); continue }
 }
 
 # 2. Also grab anything listening on the Vite dev port.
@@ -44,7 +45,7 @@ Start-Sleep -Seconds 1
 
 # 4. Report.
 $remaining = @(
-  Get-CimInstance Win32_Process -Filter "Name in ('electron.exe','node.exe','vite.exe','conhost.exe')" |
+  Get-CimInstance Win32_Process | Where-Object { $_.Name -match "^(electron|node|vite|conhost)\.exe$" } |
   Where-Object {
     $_.ExecutablePath -like "*openwhispr*" -or
     $_.CommandLine    -match "openwhispr|open-whispr|OpenWhispr"

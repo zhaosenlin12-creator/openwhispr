@@ -20,13 +20,23 @@
 
 ## 一键启动（Windows）
 
-环境装好后，**直接双击项目根目录下的 `start.bat`**，它会：
+**推荐用 `start-fast.bat`**：直接调已下好的 Electron 加载 production 渲染结果，**5-8 秒启动**，无 Vite、无 dev 编译。
+
+```cmd
+start-fast.bat
+```
+
+**停止**：双击 `stop.bat`（强杀所有相关 electron 进程 + 释放 5183 端口）。
+
+### 什么时候用 `start.bat`（dev 模式）
+
+`start.bat` = 启动 Vite + Electron dev 模式，**首次启动 1-2 分钟**（要跑 12 个 native 编译 + 6 个下载）。只在你**改源码**热重载时才需要。普通使用请用 `start-fast.bat`。
+
+`start.bat` 会：
 
 1. 加载 MSVC 环境（让 native C++ 编译能找到 `cl.exe`）
 2. 调用 `scripts/bootstrap-windows.js` 把 `.env` 同步到 `%APPDATA%` 并下载 whisper 二进制 + ggml-base 模型
 3. 启动 `npm run dev`（Vite + Electron）
-
-**停止**：双击 `stop.bat`，会强制杀掉 openwhispr 关联的所有 electron/node 进程。
 
 如果你没有 `vcvars64.bat`，请先安装 [Visual Studio 2022 Build Tools](https://aka.ms/vs/17/release/vs_BuildTools.exe)，选"**使用 C++ 的桌面开发**"工作负载。
 

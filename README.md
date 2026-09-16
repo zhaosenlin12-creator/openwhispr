@@ -140,7 +140,8 @@ We welcome contributions. Fork the repo, create a feature branch, and open a pul
 - 默认配置：本地 Whisper + 中文 + **F8** 热键（**不要用 `Ctrl+Alt+Space`，跟微信语音冲突**）
 - `bootstrap-windows.js` 每次启动把项目 `.env` 同步到 `%APPDATA%\OpenWhispr-development\.env`，避免两份配置打架
 - `.env` 里所有 API key 默认留空，clone 下来直接走本地 Whisper，不会偷偷连云端
-- `stop.bat` 改用 `scripts/stop-dev.ps1`，按命令行关键字杀进程并释放 Vite 端口 5183
+- `stop.bat` 改用 `scripts/stop-dev.ps1`，按命令行 / 进程 CWD 关键字杀进程并释放 Vite 端口 5183
+- **新增 `start-fast.bat` 直接调 Electron 加载 production 渲染，5-8 秒启动**，跳过 Vite / predev:main / npm 整条慢链
 
 ### 一键启动
 
@@ -150,17 +151,20 @@ We welcome contributions. Fork the repo, create a feature branch, and open a pul
 git clone https://github.com/zhaosenlin12-creator/openwhispr.git
 cd openwhispr
 npm install
-start.bat
+start-fast.bat
 ```
+
+`start-fast.bat` 直接调已下好的 Electron 加载 production 渲染，**5-8 秒启动**。
+`start.bat` 是 dev 模式（Vite + 热重载），首次启动 1-2 分钟，只在改源码时用。
 
 启动成功后会看到主窗口 + 任务栏托盘图标。在任意输入框里按 **F8 → 说话 → 再按 F8**，识别结果会粘贴到当前焦点窗口。
 
-**停止**：双击 `stop.bat`，或在托盘右键菜单选 Exit。**不要用窗口右上角的 X 关闭**，否则 dev 后台进程会留着，下一次 `start.bat` 会因为端口 5183 被占而起不来。
+**停止**：双击 `stop.bat`，或在托盘右键菜单选 Exit。**不要用窗口右上角的 X 关闭**，否则后台进程会留着。
 
 ### 踩坑速查（详细版在 WINDOWS-LOCAL-CN.md）
 
 1. **热键冲突** — `Ctrl+Alt+Space` 被微信语音抢走，换 `F8` 或 `F9`
-2. **`Port 5183 is already in use`** — 上一轮 dev 进程没清干净，先 `stop.bat` 再 `start.bat`
+2. **`Port 5183 is already in use`** — 上一轮进程没清干净，先 `stop.bat` 再 `start-fast.bat`
 3. **electron 下载卡死** — 项目里已预放好 `node_modules\electron\dist\`；新机器 clone 后设 `ELECTRON_MIRROR=https://npmmirror.com/mirrors/electron/`
 4. **HF 拉不到模型** — 已全量换 `hf-mirror.com`
 5. **MSVC 找不到** — `start.bat` 已 `call vcvars64.bat`；手动跑 dev 自己 call 一次

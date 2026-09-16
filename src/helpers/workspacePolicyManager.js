@@ -323,6 +323,23 @@ function createWorkspacePolicyManager({
     try {
       identity = captureIdentity(request ?? {});
     } catch (error) {
+      if (
+        !(error instanceof AuthContextError) &&
+        /OpenWhispr API URL not configured/i.test(error.message || "")
+      ) {
+        return {
+          success: true,
+          status: "unmanaged",
+          revision,
+          accountId: normalizeAccountId(request?.accountId),
+          authGeneration: tokenStore.getState()?.generation ?? null,
+          managed: false,
+          policy: null,
+          policyUpdatedAt: null,
+          endpointSupported: true,
+          error: null,
+        };
+      }
       return {
         success: false,
         status: "error",

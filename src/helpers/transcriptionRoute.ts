@@ -12,6 +12,7 @@ import {
   isSecureHttpEndpoint,
   isAzureOpenAIEndpoint,
   buildAzureTranscriptionUrl,
+  matchesHost,
 } from "../utils/urlUtils.ts";
 import {
   isSelfHostedTranscription,
@@ -407,6 +408,25 @@ export function resolveTranscriptionRoute({
       "STREAMING_ONLY_PROVIDER",
       STREAMING_ONLY_PROVIDER_MESSAGE_KEY
     );
+  }
+
+  // MiniMax STT is not OpenAI-compatible: it uses /v1/speech_to_text with model=asr-1.0
+  // (MiniMax-M2 / 2.5 keys are routed via the same OpenAI key slot in .env).
+  if (
+    provider === "openai" &&
+    (matchesHost(API_ENDPOINTS.TRANSCRIPTION_BASE, "api.minimaxi.com") ||
+      matchesHost(API_ENDPOINTS.TRANSCRIPTION_BASE, "api.minimax.io"))
+  ) {
+    return {
+      transport: "http-batch",
+      provider: "minimax",
+      // /speech_to_text (not /v1/speech_to_text) because TRANSCRIPTION_BASE already ends in /v1.
+      endpoint: buildApiUrl(API_ENDPOINTS.TRANSCRIPTION_BASE, "/speech_to_text"),
+      model: "asr-1.0",
+      auth: { scheme: "bearer", keyRef: "openai" },
+      sizeCapBytes: BYOK_FILE_SIZE_LIMIT,
+      language,
+    };
   }
 
   const isGroq = provider === "groq";

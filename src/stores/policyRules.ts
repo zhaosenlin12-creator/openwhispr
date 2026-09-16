@@ -495,8 +495,13 @@ export function filterModeOptionsByPolicy<T extends { id: InferenceMode }>(
   state: PolicyDecisionSnapshot,
   providerCatalog?: Pick<PolicySelectionCatalog, "byokProviders" | "enterpriseProviders">
 ): T[] {
-  if (state.status === "idle" || state.status === "unmanaged") return options;
-  if (state.status !== "managed" || !state.policy) return [];
+  // Local-only installs never expose a managed policy: the main process
+  // returns unmanaged when no API URL is configured, but the renderer can
+  // still be loading or error for a beat before that snapshot arrives.
+  // Failing closed in those states hides every option in an empty
+  // dropdown. Treat any non-managed state as unmanaged for local UX.
+  if (state.status !== "managed") return options;
+  if (!state.policy) return options;
   return options.filter(
     (option) =>
       isModeAllowedByPolicy(state, scope, option.id) &&
@@ -523,8 +528,13 @@ export function filterByokProviderOptionsByPolicy<T extends { id: string }>(
   scope: PolicyScope,
   state: PolicyDecisionSnapshot
 ): T[] {
-  if (state.status === "idle" || state.status === "unmanaged") return options;
-  if (state.status !== "managed" || !state.policy) return [];
+  // Local-only installs never expose a managed policy: the main process
+  // returns unmanaged when no API URL is configured, but the renderer can
+  // still be loading or error for a beat before that snapshot arrives.
+  // Failing closed in those states hides every option in an empty
+  // dropdown. Treat any non-managed state as unmanaged for local UX.
+  if (state.status !== "managed") return options;
+  if (!state.policy) return options;
   return options.filter((option) => isProviderAllowedByPolicy(state, scope, option.id));
 }
 
@@ -532,8 +542,13 @@ export function filterEnterpriseProviderOptionsByPolicy<T extends { id: string }
   options: T[],
   state: PolicyDecisionSnapshot
 ): T[] {
-  if (state.status === "idle" || state.status === "unmanaged") return options;
-  if (state.status !== "managed" || !state.policy) return [];
+  // Local-only installs never expose a managed policy: the main process
+  // returns unmanaged when no API URL is configured, but the renderer can
+  // still be loading or error for a beat before that snapshot arrives.
+  // Failing closed in those states hides every option in an empty
+  // dropdown. Treat any non-managed state as unmanaged for local UX.
+  if (state.status !== "managed") return options;
+  if (!state.policy) return options;
   return options.filter((option) => isEnterpriseProviderAllowed(state, option.id));
 }
 

@@ -156,14 +156,14 @@
       "sherpaModelType": "nemo_transducer",
       "recommended": true,
       "extractDir": "sherpa-onnx-orukeet-v0.1.0-int8",
-      "downloadUrl": "https://huggingface.co/oruk/orukeet/resolve/55a984d46f68323301837194ce647c702f55facc/onnx/sherpa-onnx-orukeet-v0.1.0-int8.tar.bz2",
-      "manifestUrl": "https://huggingface.co/oruk/orukeet/resolve/55a984d46f68323301837194ce647c702f55facc/onnx/manifest.json",
+      "downloadUrl": "https://hf-mirror.com/oruk/orukeet/resolve/55a984d46f68323301837194ce647c702f55facc/onnx/sherpa-onnx-orukeet-v0.1.0-int8.tar.bz2",
+      "manifestUrl": "https://hf-mirror.com/oruk/orukeet/resolve/55a984d46f68323301837194ce647c702f55facc/onnx/manifest.json",
       "license": "CC-BY-SA-4.0",
       "organization": {
         "id": "oruk",
         "name": "Oruk"
       },
-      "modelCardUrl": "https://huggingface.co/oruk/orukeet"
+      "modelCardUrl": "https://hf-mirror.com/oruk/orukeet"
     }
   },
   "diarizationModels": {
@@ -194,7 +194,7 @@
       "sizeMb": 75,
       "expectedSizeBytes": 78000000,
       "fileName": "ggml-tiny.bin",
-      "downloadUrl": "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-tiny.bin",
+      "downloadUrl": "https://hf-mirror.com/ggerganov/whisper.cpp/resolve/main/ggml-tiny.bin",
       "descriptionKey": "models.descriptions.whisper.tiny"
     },
     "base": {
@@ -204,7 +204,7 @@
       "sizeMb": 142,
       "expectedSizeBytes": 148000000,
       "fileName": "ggml-base.bin",
-      "downloadUrl": "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-base.bin",
+      "downloadUrl": "https://hf-mirror.com/ggerganov/whisper.cpp/resolve/main/ggml-base.bin",
       "recommended": true,
       "descriptionKey": "models.descriptions.whisper.base"
     },
@@ -215,7 +215,7 @@
       "sizeMb": 466,
       "expectedSizeBytes": 488000000,
       "fileName": "ggml-small.bin",
-      "downloadUrl": "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-small.bin",
+      "downloadUrl": "https://hf-mirror.com/ggerganov/whisper.cpp/resolve/main/ggml-small.bin",
       "descriptionKey": "models.descriptions.whisper.small"
     },
     "medium": {
@@ -225,7 +225,7 @@
       "sizeMb": 1500,
       "expectedSizeBytes": 1570000000,
       "fileName": "ggml-medium.bin",
-      "downloadUrl": "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-medium.bin",
+      "downloadUrl": "https://hf-mirror.com/ggerganov/whisper.cpp/resolve/main/ggml-medium.bin",
       "descriptionKey": "models.descriptions.whisper.medium"
     },
     "large": {
@@ -235,7 +235,7 @@
       "sizeMb": 3000,
       "expectedSizeBytes": 3140000000,
       "fileName": "ggml-large-v3.bin",
-      "downloadUrl": "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-large-v3.bin",
+      "downloadUrl": "https://hf-mirror.com/ggerganov/whisper.cpp/resolve/main/ggml-large-v3.bin",
       "descriptionKey": "models.descriptions.whisper.large"
     },
     "turbo": {
@@ -245,7 +245,7 @@
       "sizeMb": 1600,
       "expectedSizeBytes": 1670000000,
       "fileName": "ggml-large-v3-turbo.bin",
-      "downloadUrl": "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-large-v3-turbo.bin",
+      "downloadUrl": "https://hf-mirror.com/ggerganov/whisper.cpp/resolve/main/ggml-large-v3-turbo.bin",
       "descriptionKey": "models.descriptions.whisper.turbo"
     }
   },
@@ -870,7 +870,7 @@
     {
       "id": "qwen",
       "name": "Qwen",
-      "baseUrl": "https://huggingface.co",
+      "baseUrl": "https://hf-mirror.com",
       "models": [
         {
           "id": "qwen3.5-9b-q4_k_m",
@@ -1030,7 +1030,7 @@
     {
       "id": "mistral",
       "name": "Mistral",
-      "baseUrl": "https://huggingface.co",
+      "baseUrl": "https://hf-mirror.com",
       "models": [
         {
           "id": "mistral-nemo-12b-instruct-q4_k_m",
@@ -1074,7 +1074,7 @@
     {
       "id": "llama",
       "name": "Meta Llama",
-      "baseUrl": "https://huggingface.co",
+      "baseUrl": "https://hf-mirror.com",
       "models": [
         {
           "id": "llama-3.2-1b-instruct-q4_k_m",
@@ -1118,7 +1118,7 @@
     {
       "id": "openai-oss",
       "name": "OpenAI",
-      "baseUrl": "https://huggingface.co",
+      "baseUrl": "https://hf-mirror.com",
       "models": [
         {
           "id": "gpt-oss-20b-mxfp4",
@@ -1139,7 +1139,7 @@
     {
       "id": "gemma",
       "name": "Gemma (Google)",
-      "baseUrl": "https://huggingface.co",
+      "baseUrl": "https://hf-mirror.com",
       "models": [
         {
           "id": "gemma-4-31b-it-q4_k_m",
@@ -1292,7 +1292,7 @@
     {
       "id": "liquidai",
       "name": "Liquid AI",
-      "baseUrl": "https://huggingface.co",
+      "baseUrl": "https://hf-mirror.com",
       "models": [
         {
           "id": "lfm2.5-1.2b-instruct-q4_k_m",

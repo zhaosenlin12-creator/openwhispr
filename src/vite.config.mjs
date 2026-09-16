@@ -47,6 +47,16 @@ export default defineConfig(({ mode }) => {
     ],
     base: "./", // Use relative paths for file:// protocol in Electron
     envDir, // Load .env from project root
+    define: {
+      // Inject user-supplied .env base URLs and MiniMax API key into the renderer
+      // at compile time. Without these, the renderer falls back to OpenAI hardcoded
+      // endpoint because the browser context has no Node-style process.env.
+      "process.env.OPENAI_BASE_URL": JSON.stringify(env.OPENAI_BASE_URL || ""),
+      "process.env.OPENWHISPR_OPENAI_BASE_URL": JSON.stringify(env.OPENWHISPR_OPENAI_BASE_URL || ""),
+      "process.env.WHISPER_BASE_URL": JSON.stringify(env.WHISPER_BASE_URL || ""),
+      "process.env.OPENWHISPR_TRANSCRIPTION_BASE_URL": JSON.stringify(env.OPENWHISPR_TRANSCRIPTION_BASE_URL || ""),
+      "process.env.OPENAI_API_KEY": JSON.stringify(env.OPENAI_API_KEY || ""),
+    },
     resolve: {
       alias: {
         "@": path.resolve(__dirname, "."),

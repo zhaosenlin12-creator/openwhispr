@@ -88,7 +88,11 @@ export const getModelListBaseCandidates = (base: string): string[] => {
   return withV1 === normalized ? [normalized] : [normalized, withV1];
 };
 
-const env = (typeof import.meta !== "undefined" && (import.meta as any).env) || {};
+// process.env (main: Node) wins; import.meta.env (renderer: Vite) is the fallback.
+// process.env must come first because import.meta.env only exposes VITE_* prefixed
+// vars at build time, which leaves the user OPENAI_BASE_URL etc. invisible.
+const env = (typeof process !== "undefined" && process.env) ||
+  ((typeof import.meta !== "undefined" && (import.meta as any).env) || {});
 
 const computeBaseUrl = (candidates: Array<string | undefined>, fallback: string): string => {
   for (const candidate of candidates) {
@@ -100,16 +104,17 @@ const computeBaseUrl = (candidates: Array<string | undefined>, fallback: string)
   return fallback;
 };
 
+// Default OpenAI-compatible endpoint. Override via .env (OPENAI_BASE_URL etc.).
+// When LOCAL_TRANSCRIPTION_PROVIDER=whisper, the route resolver returns
+// transport: "local" before this URL is consulted, so this default only
+// matters for users who deliberately route STT to a remote provider.
 const DEFAULT_OPENAI_BASE = computeBaseUrl(
   [env.OPENWHISPR_OPENAI_BASE_URL as string | undefined, env.OPENAI_BASE_URL as string | undefined],
   "https://api.openai.com/v1"
 );
 
 const DEFAULT_TRANSCRIPTION_BASE = computeBaseUrl(
-  [
-    env.OPENWHISPR_TRANSCRIPTION_BASE_URL as string | undefined,
-    env.WHISPER_BASE_URL as string | undefined,
-  ],
+  [env.OPENWHISPR_TRANSCRIPTION_BASE_URL as string | undefined, env.WHISPER_BASE_URL as string | undefined],
   DEFAULT_OPENAI_BASE
 );
 

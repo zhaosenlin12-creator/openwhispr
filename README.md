@@ -122,3 +122,23 @@ We welcome contributions. Fork the repo, create a feature branch, and open a pul
 - **[React](https://react.dev/)** — UI component library
 - **[shadcn/ui](https://ui.shadcn.com/)** — accessible components built on Radix primitives
 - **[Neon](https://console.neon.tech/app/?promo=openwhispr)** — serverless Postgres powering OpenWhispr Cloud
+
+---
+
+## 本仓库本地运行（Windows / 国内网络）
+
+本 fork 在 [上游 main](https://github.com/OpenWhispr/openwhispr) 基础上做了 Windows + 国内网络场景下的修补，详见 **[WINDOWS-LOCAL-CN.md](./WINDOWS-LOCAL-CN.md)**。
+
+要点：
+
+```cmd
+git clone <本仓库>
+cd openwhispr
+npm install
+start.bat
+```
+
+- 一键启动：`start.bat`（含 MSVC 环境加载、`.env` 同步、whisper 二进制 + ggml-base 模型下载）
+- 一键停止：`stop.bat`
+- 默认走本地 Whisper 中文识别，按 **F8** 录到任意输入框（不要用 `Ctrl+Alt+Space`，跟微信语音冲突）
+- 模型/网络/热键等所有踩过的坑都在 `WINDOWS-LOCAL-CN.md` 列出，按章节查即可

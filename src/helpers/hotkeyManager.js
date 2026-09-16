@@ -14,7 +14,7 @@ const HOTKEY_REGISTRATION_DELAY_MS = 1000;
 const FALLBACK_HOTKEYS = ["F8", "F9", "Control+Shift+Space"];
 
 // Default hotkey for dictation if no saved value exists
-const DEFAULT_HOTKEY = "Control+Super";
+const DEFAULT_HOTKEY = "F8"; // Avoid Control+Alt+Space (WeChat voice) and Control+Super (OS-reserved on Win).
 
 // Dictation has a dedicated native path because it also supports push-to-talk.
 const LINUX_NATIVE_TAP_SLOTS = new Set(["meeting", "voiceAgent", "translation"]);

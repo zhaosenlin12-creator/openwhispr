@@ -4,7 +4,7 @@ const path = require("path");
 const { downloadFile, parseArgs } = require("./lib/download-utils");
 
 const VAD_MODEL_URL =
-  "https://huggingface.co/ggml-org/whisper-vad/resolve/main/ggml-silero-v5.1.2.bin";
+  "https://hf-mirror.com/ggml-org/whisper-vad/resolve/main/ggml-silero-v5.1.2.bin";
 const VAD_MODEL_FILE = "ggml-silero-v5.1.2.bin";
 
 function getOutputDir() {

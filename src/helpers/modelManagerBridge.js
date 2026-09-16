@@ -450,12 +450,16 @@ class ModelManager {
   }
 
   getDownloadUrl(provider, model) {
-    const baseUrl = provider.baseUrl || "https://huggingface.co";
+    const baseUrl = this.normalizeBaseUrl(provider.baseUrl || "https://huggingface.co");
     return `${baseUrl}/${model.hfRepo}/resolve/main/${model.fileName}`;
   }
 
+  normalizeBaseUrl(url) {
+    return String(url || "").replace(/huggingface\.co/g, "hf-mirror.com");
+  }
+
   getDraftDownloadUrl(provider, model) {
-    const baseUrl = provider.baseUrl || "https://huggingface.co";
+    const baseUrl = this.normalizeBaseUrl(provider.baseUrl || "https://huggingface.co");
     return `${baseUrl}/${model.draftHfRepo}/resolve/main/${model.draftFileName}`;
   }
 

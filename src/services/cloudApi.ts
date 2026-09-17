@@ -61,6 +61,12 @@ async function cloudRequest<T = unknown>(
     );
   }
 
+  if ((result as any)?.skipped) {
+    // Caller asked us to skip (e.g. cloud is not configured). Return undefined
+    // so destructuring `{ folders } = await ...` throws predictably; the
+    // SyncService treats this as \"no cloud data\".
+    return undefined as unknown as T;
+  }
   return result.data as T;
 }
 

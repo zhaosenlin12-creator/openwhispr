@@ -75,7 +75,13 @@ function createCloudApiRequestHandler({
   return async function handleCloudApiRequest(opts) {
     try {
       const apiUrl = getApiUrl();
-      if (!apiUrl) throw new Error("OpenWhispr API URL not configured");
+      if (!apiUrl) {
+        // Cloud is not configured (VITE_OPENWHISPR_API_URL is empty in .env).
+        // Return a clean skip so reconcilers do not busy-loop waiting for a
+        // cloud that will never reply. The previous behavior was to throw, which
+        // every reconciliation attempt then logged, blocking the UI on a "Loading..." screen.
+        return { success: true, data: null, skipped: "no-api-url" };
+      }
 
       if (typeof opts?.path !== "string" || !opts.path.startsWith("/")) {
         return { success: false, error: "Invalid API path" };

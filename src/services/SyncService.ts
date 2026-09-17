@@ -1550,7 +1550,9 @@ export class SyncService {
       const syncStartedAt = new Date().toISOString();
       const teamCapable = this.canSyncTeamSpaces() && this.hasTeamSpacesCapability();
       const scope = teamCapable ? "all" : undefined;
-      const { folders: cloudFolders } = await FoldersService.list(since, scope);
+      const foldersResult = await FoldersService.list(since, scope);
+      if (!foldersResult) return true;
+      const { folders: cloudFolders } = foldersResult;
       if (cloudFolders.length > 0) this.teamPassMovedWork = true;
       const ctx = await this.buildSpaceContext();
       // Parked or failed rows must retry: they hold the cursor back (and fail
@@ -1925,9 +1927,11 @@ export class SyncService {
       // their stored cloud copy, so they must not re-pull the whole delta.
       let parkedRows = 0;
       while (true) {
-        const { notes: cloudNotes } = since
+        const notesResult = since
           ? await NotesService.list(BATCH_SIZE, undefined, cursor, scope, cursorId)
           : await NotesService.list(BATCH_SIZE, cursor, undefined, scope, cursorId);
+        if (!notesResult) return true;
+        const { notes: cloudNotes } = notesResult;
         if (cloudNotes.length === 0) break;
         this.teamPassMovedWork = true;
 

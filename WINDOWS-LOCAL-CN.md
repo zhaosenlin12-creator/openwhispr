@@ -287,6 +287,35 @@ rmdir /s /q "%APPDATA%\OpenWhispr-development\Local Storage" "%APPDATA%\OpenWhis
 
 **解法**:已修了。`src/AppRouter.jsx` 现在在 `OPENWHISPR_SKIP_ONBOARDING=1` 时直接强制 `setIsLoading(false)`,且渲染层所有 onboarding/reauth 门都加 `&& !skipOnboarding` 跳过条件,直接出 ControlPanel。**前提还是老话**:`.env` 里有 `OPENWHISPR_SKIP_ONBOARDING=1`、跑过 `npm run build:renderer`、`%APPDATA%\OpenWhispr-development\Local Storage` 清过(让 bootstrap 能跑)。
 
+### 14. 中文短句被识别成日文(以上就是了 → 以上就是了よ)
+
+**症状**:F8 说完中文,粘贴出来却是中文+日文假名混在一起,比如 `以上就是了` 变成 `以上就是了よ` 或 `以上就是だよ`。短的、带汉字的句子里最容易出现,长一点的、上下文多的反而正常。
+
+**原因**:whisper.cpp v1.9.x 的 `--language auto` 自带语种检测,在用户没指定语言时会自动挑一个 base language。短句 + 汉字的组合下,它经常把中文判成日语,然后按日语的发音规则去"翻译"汉字,于是冒出 `よ` `だよ` 这种假名尾巴。**不是模型坏了,是命令行的 `--language` 给错了。**
+
+要确认命令行有没有带错,先启动一次应用,然后在 PowerShell 里查 whisper-server 进程:
+```powershell
+Get-CimInstance Win32_Process |
+  Where-Object { $_.Name -like '*whisper-server*' } |
+  Select-Object ProcessId, CommandLine
+```
+正确应该看到 `--language zh`(或其它 base code),**绝不能是 `--language auto`**。如果是 auto,就是下面这条没修复到老。
+
+**解法**:本仓库 commit `1390d152` 已经把语言钉进 server prewarm:
+- `main.js` 把 `process.env.DICTATION_LANGUAGE` 透传给 `whisperManager.initializeAtStartup`。
+- `src/helpers/whisper.js` 的 `_resolveBaseLanguage` 把 `zh-CN` 折成 `zh`(其它带 region 的同理),然后在启动 whisper-server 时传 `language: "zh"`,命令行的 `--language` 就再也不是 `auto` 了。
+- `src/helpers/whisperServer.js` 的 `getLanguageSignature` 把语言并进了 `start()` 的 no-op 保护,以后用户改语言会强制重启 server,不会再让旧的 `auto` 进程留着。
+- `src/stores/settingsStore.ts` 默认值改成 `zh-CN`,并把已存的 `auto` 迁到 `zh-CN`,新装和升级都直接进入"说中文"模式。
+
+**自查 5 步**(已修过一遍还想再确认的话):
+1. 看 `%APPDATA%\OpenWhispr-development\.env` 第一段 `DICTATION_LANGUAGE=zh-CN`(注意不是 `auto`)。这是用户数据,被 IPC sync-startup-preferences 每次启动会重写,被它改回 `auto` 就代表 Settings → 语言选择器里还是 `auto`,要去 UI 里选 `中文`。
+2. 看 PowerShell 上面的命令,确认 `--language zh`。
+3. 看日志 `%APPDATA%\OpenWhispr-development\logs\debug-*.log`,搜 `Pre-warming whisper-server`,日志对象里应该有 `"language": "zh"` 这一行,没有就回到 main.js 的 `whisperSettings` 检查 `language` 字段。
+4. `npm run build:renderer` 重新跑一遍,renderer 的 default 也是 `zh-CN` 才会落到 localStorage。
+5. `stop.bat` 杀干净,再 `start-fast.bat` 启一次。
+
+**多语种怎么开**:whisper-server 一次只支持一种 base language。如果你要中英混说、或者今天中文明天英文,在 Settings → 语言 → "转写语言"里选 `自动检测`(`auto`),代价就是上面这条短句误识别;不混语种就保持 `中文`(`zh-CN`)。要在 UI 之外改,直接编辑 `%APPDATA%\OpenWhispr-development\.env` 的 `DICTATION_LANGUAGE=zh-CN`,然后 `stop.bat` 重启。
+
 ---
 
 ## 模型选择
@@ -309,6 +338,8 @@ rmdir /s /q "%APPDATA%\OpenWhispr-development\Local Storage" "%APPDATA%\OpenWhis
 **日志位置**：`%APPDATA%\OpenWhispr-development\logs\debug-<timestamp>.log`，按 LastWriteTime 倒序找最新的。
 
 **录制但没识别**：搜 `Recording stopped`，看后面有没有 `whisper-server transcription completed`。如果没有，说明录音正常但没识别成功，看 [踩坑 #5]。
+
+**识别出来是日文/中英混杂**：命令行错了，`--language` 应该跟用户语种走，不该是 `auto`。看 [踩坑 #14] 的自查 5 步。
 
 **完全没按热键响应**：搜 `KEY_DOWN` / `KEY_UP`，看有没有事件。如果完全没有，看 [踩坑 #1]。
 

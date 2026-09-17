@@ -88,6 +88,17 @@ function MainApp() {
   }, [isDictationPanel]);
 
   useEffect(() => {
+    if (process.env.OPENWHISPR_SKIP_ONBOARDING === "1") {
+      // Local-only mode: do not let auth gating hold the renderer in the
+      // Loading state. settingsStore.ts bootstrap already wired up
+      // useLocalWhisper=true; the auth hook keeps looping reconciliation
+      // attempts when there is no signed-in user, which would otherwise
+      // pin authLoaded at false and never clear isLoading. Skip the gate
+      // and force isLoading=false so the setOnboardingActive effect below
+      // can release hotkeys and popup surfaces immediately.
+      setIsLoading(false);
+      return;
+    }
     if (!authLoaded) return;
 
     const onboardingCompleted = localStorage.getItem("onboardingCompleted") === "true" || process.env.OPENWHISPR_SKIP_ONBOARDING === "1";
@@ -195,11 +206,19 @@ function MainApp() {
   // isLoading clears once the onboarding effect has run, which itself waits
   // for authLoaded — and authLoaded terminates even when the session cannot
   // resolve (guest/offline presents as signed out).
-  if (isLoading || isWaitingForPolicyStart) {
+  // Local-only mode: skip every auth/onboarding gate and render the Control
+  // Panel directly. The auth hook keeps looping reconciliation attempts when
+  // there is no signed-in user (or a stale one), which would hold
+  // authLoaded at false forever and keep this screen on "Loading...". The
+  // user opted out of cloud entirely with OPENWHISPR_SKIP_ONBOARDING=1, so
+  // nothing the auth hook is waiting on matters for the local-only flow.
+  const skipOnboarding = process.env.OPENWHISPR_SKIP_ONBOARDING === "1";
+
+  if (!skipOnboarding && (isLoading || isWaitingForPolicyStart)) {
     return <LoadingFallback />;
   }
 
-  if (isControlPanel && showOnboarding) {
+  if (isControlPanel && showOnboarding && !skipOnboarding) {
     return (
       <Suspense fallback={<LoadingFallback />}>
         <OnboardingFlow onComplete={handleOnboardingComplete} />
@@ -208,7 +227,7 @@ function MainApp() {
     );
   }
 
-  if (isControlPanel && needsReauth) {
+  if (isControlPanel && needsReauth && !skipOnboarding) {
     return (
       <ReauthenticationScreen
         onContinueWithoutAccount={() => {

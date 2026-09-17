@@ -279,6 +279,14 @@ rmdir /s /q "%APPDATA%\OpenWhispr-development\Local Storage" "%APPDATA%\OpenWhis
 
 但前提是 `OPENWHISPR_SKIP_ONBOARDING=1` 必须在 `.env` 里(本地使用 99% 情况都该有),并且 `npm run build:renderer` 跑过把这个 flag 烤进 dist(它是编译期注入的)。如果 bootstrap 没生效,99% 是因为:`OPENWHISPR_SKIP_ONBOARDING=` 是空的、或者没重建、或者 leveldb 里残留了 `useLocalWhisper=false` 把首次启动覆盖掉了(把这条清掉重启就行)。
 
+### 13. 窗口停在 "Loading..." 转圈,顶部一条 "Codex++" 标签
+
+**症状**:启动后窗口中央一直转蓝色 spinner,文字 "Loading...",死活不出 Control Panel。F8 在系统里也按了没反应(热键被压在 main 那边没释放)。
+
+**原因**:在本地模式下 `OPENWHISPR_SKIP_ONBOARDING=1` 跳过的是 onboarding,**没有跳过 auth**。`useAuth` 还是会尝试解析 Better Auth session 并 reconcile 一个空的 account scope,反复失败但 `authLoaded` 始终是 `false`,`isLoading` 也就永远不结束 → `AppRouter` 一直返回 `LoadingFallback`。同时 `setOnboardingActive(true)` 从来没机会被调用,main 进程的 hotkey 也一直被压在 onboarding 期。
+
+**解法**:已修了。`src/AppRouter.jsx` 现在在 `OPENWHISPR_SKIP_ONBOARDING=1` 时直接强制 `setIsLoading(false)`,且渲染层所有 onboarding/reauth 门都加 `&& !skipOnboarding` 跳过条件,直接出 ControlPanel。**前提还是老话**:`.env` 里有 `OPENWHISPR_SKIP_ONBOARDING=1`、跑过 `npm run build:renderer`、`%APPDATA%\OpenWhispr-development\Local Storage` 清过(让 bootstrap 能跑)。
+
 ---
 
 ## 模型选择

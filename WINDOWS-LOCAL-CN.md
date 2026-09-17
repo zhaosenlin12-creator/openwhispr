@@ -10,7 +10,7 @@
 2. **`predev:main` 兜底**：上游的 predev:main 链里有几个 `download:*` 步骤会因网络问题硬挂，我们在 `package.json` 里给非关键步骤加了 `|| true`。
 3. **whisper.cpp 二进制**：上游只在 `prebuild` 时下载 whisper-server，`predev` 不下。本地脚本 `scripts/bootstrap-windows.js` 弥补了这个缺口。
 4. **本地 Whisper 模型**：把 `ggml-base.bin` (~142 MB) 的下载入口加进 bootstrap，避免首次启动还要去设置里手点下载。
-5. **`.env` 默认本地化**：项目根 `.env` 默认走本地 Whisper（`LOCAL_TRANSCRIPTION_PROVIDER=whisper` / `LOCAL_WHISPER_MODEL=base`），并把热键改成 `F8`（**不要用 Ctrl+Alt+Space，跟微信语音冲突**）。
+5. **`.env` 默认本地化**：项目根 `.env` 默认走本地 Whisper（`LOCAL_TRANSCRIPTION_PROVIDER=whisper` / `LOCAL_WHISPER_MODEL=small`），并把热键改成 `F8`（**不要用 Ctrl+Alt+Space，跟微信语音冲突**）。
 6. **`%APPDATA%` 的 .env 同步**：新增 `scripts/bootstrap-windows.js`，每次启动时把项目 `.env` 里非空键同步到 `%APPDATA%\OpenWhispr-development\.env`，避免两份配置打架。
 7. **环境变量覆盖逻辑保留**：上游 `src/config/constants.ts` 里 `process.env` 优先于 `import.meta.env`，所以根 `.env` 修改会立即生效。
 
@@ -35,7 +35,7 @@ start-fast.bat
 `start.bat` 会：
 
 1. 加载 MSVC 环境（让 native C++ 编译能找到 `cl.exe`）
-2. 调用 `scripts/bootstrap-windows.js` 把 `.env` 同步到 `%APPDATA%` 并下载 whisper 二进制 + ggml-base 模型
+2. 调用 `scripts/bootstrap-windows.js` 把 `.env` 同步到 `%APPDATA%` 并下载 whisper 二进制 + ggml-small 模型
 3. 启动 `npm run dev`（Vite + Electron）
 
 如果你没有 `vcvars64.bat`，请先安装 [Visual Studio 2022 Build Tools](https://aka.ms/vs/17/release/vs_BuildTools.exe)，选"**使用 C++ 的桌面开发**"工作负载。
@@ -104,7 +104,7 @@ start.bat
 
 ```ini
 LOCAL_TRANSCRIPTION_PROVIDER=whisper
-LOCAL_WHISPER_MODEL=base
+LOCAL_WHISPER_MODEL=small
 DICTATION_LANGUAGE=zh-CN
 DICTATION_KEY=F8
 ACTIVATION_MODE=push
@@ -320,14 +320,15 @@ Get-CimInstance Win32_Process |
 
 ## 模型选择
 
-| 模型 | 大小 | 中文 | 速度 | 适用场景 |
-| --- | --- | --- | --- | --- |
-| Whisper ggml-tiny | 75 MB | 弱 | 极快 | 英文短指令 |
-| **Whisper ggml-base** | **142 MB** | **✅** | **快** | **默认推荐**，中文/英文日常 |
-| Whisper ggml-small | 466 MB | ✅ | 中等 | 更高准确率，需要等下载 |
-| Whisper ggml-medium | 1.5 GB | ✅ | 慢 | 高质量长录音 |
-| Orukeet v0.1.0 | 671 MB | ❌ | 快 | **欧洲语言**，不支持中文 |
-| Cohere Transcribe | 1.7 GB | ✅ | 慢 | 14 语种多语言 |
+| 模型 | 大小 | 中文 | 英文 | 速度 | 适用场景 |
+| --- | --- | --- | --- | --- | --- |
+| Whisper ggml-tiny | 75 MB | 弱 | 一般 | 极快 | 英文短指令 |
+| Whisper ggml-base | 142 MB | 中（短句偶尔误判日语） | 一般 | 快 | 低配机器临时用 |
+| **Whisper ggml-small** | **466 MB** | **✅** | **✅** | **中等** | **默认推荐**，中文/英文日常，CPU 上单句 < 1s |
+| Whisper ggml-medium | 1.5 GB | ✅ | ✅ | 慢 | 高质量长录音 |
+| Whisper ggml-large-v3-turbo | 1.6 GB | ✅ | ✅ | 慢 | 顶配机器，追求极致 |
+| Orukeet v0.1.0 | 671 MB | ❌ | ❌ | 快 | **欧洲语言**，不支持中文 |
+| Cohere Transcribe | 1.7 GB | ✅ | ✅ | 慢 | 14 语种多语言 |
 
 切换模型：改 `.env` 的 `LOCAL_WHISPER_MODEL=`，重启后会自动下载。
 

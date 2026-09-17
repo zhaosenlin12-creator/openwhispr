@@ -56,6 +56,7 @@ export default defineConfig(({ mode }) => {
       "process.env.WHISPER_BASE_URL": JSON.stringify(env.WHISPER_BASE_URL || ""),
       "process.env.OPENWHISPR_TRANSCRIPTION_BASE_URL": JSON.stringify(env.OPENWHISPR_TRANSCRIPTION_BASE_URL || ""),
       "process.env.OPENAI_API_KEY": JSON.stringify(env.OPENAI_API_KEY || ""),
+      "process.env.OPENWHISPR_SKIP_ONBOARDING": JSON.stringify(env.OPENWHISPR_SKIP_ONBOARDING || ""),
     },
     resolve: {
       alias: {

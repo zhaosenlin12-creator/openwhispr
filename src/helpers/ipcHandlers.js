@@ -6296,11 +6296,11 @@ class IPCHandlers {
     ipcMain.handle("cloud-health-check", async () => {
       const apiUrl = getApiUrl();
       if (!apiUrl) {
-        return {
-          ok: false,
-          code: "NO_API_URL",
-          messageKey: "streaming.errors.cloudUnreachable.generic",
-        };
+        // Local-only setup: no cloud endpoint configured, so a "health"
+        // check is meaningless. Return a healthy no-op so the renderer
+        // treats the missing cloud as an explicit off switch instead of
+        // surfacing "Network request failed" banners in onboarding.
+        return { ok: true, status: 204, skipped: "no-api-url" };
       }
       const url = `${apiUrl}/api/health`;
       try {

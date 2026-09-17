@@ -90,7 +90,7 @@ function MainApp() {
   useEffect(() => {
     if (!authLoaded) return;
 
-    const onboardingCompleted = localStorage.getItem("onboardingCompleted") === "true";
+    const onboardingCompleted = localStorage.getItem("onboardingCompleted") === "true" || process.env.OPENWHISPR_SKIP_ONBOARDING === "1";
     const authSkipped =
       localStorage.getItem("authenticationSkipped") === "true" ||
       localStorage.getItem("skipAuth") === "true";
@@ -155,7 +155,7 @@ function MainApp() {
   useEffect(() => {
     if (isLoading || isWaitingForPolicyStart) return;
 
-    const onboardingCompleted = localStorage.getItem("onboardingCompleted") === "true";
+    const onboardingCompleted = localStorage.getItem("onboardingCompleted") === "true" || process.env.OPENWHISPR_SKIP_ONBOARDING === "1";
     const normalAppVisible =
       onboardingCompleted && (!isControlPanel || (!showOnboarding && !needsReauth));
     const authSkipped =

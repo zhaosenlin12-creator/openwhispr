@@ -3423,6 +3423,33 @@ export async function initializeSettings(): Promise<void> {
       );
     }
 
+    // Local-only bootstrap. When OPENWHISPR_SKIP_ONBOARDING=1 is baked in via
+    // vite define, the user opted out of cloud setup. If they never touched
+    // the local-mode toggle (default false) AND a local provider is wired
+    // through LOCAL_TRANSCRIPTION_PROVIDER, flip useLocalWhisper=true so
+    // dictation actually reaches the local whisper server instead of the
+    // empty-cloud IPC. Gated by the absence of any localStorage entry so a
+    // user who later disables it stays disabled.
+    try {
+      if (
+        process.env.OPENWHISPR_SKIP_ONBOARDING === "1" &&
+        isBrowser &&
+        !state.useLocalWhisper &&
+        !localStorage.getItem("useLocalWhisper")
+      ) {
+        const provider = state.localTranscriptionProvider;
+        if (provider === "whisper" || provider === "nvidia" || provider === "cohere") {
+          createBooleanSetter("useLocalWhisper")(true);
+        }
+      }
+    } catch (err) {
+      logger.warn(
+        "Failed to bootstrap local-only mode",
+        { error: (err as Error).message },
+        "settings"
+      );
+    }
+
     // Sync UI language from main process
     try {
       const envLanguage = await window.electronAPI.getUiLanguage?.();

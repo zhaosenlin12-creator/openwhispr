@@ -241,6 +241,34 @@ WHISPER_BASE_URL=https://api.example.com/v1
 
 **解法**：先双击 `stop.bat`（这个版本会按命令行的 `openwhispr` 关键字杀进程，并强制释放 5183 端口），再 `start.bat`。
 
+### 11. 启动后卡在 "Choose your OpenWhispr setup"，顶部红条 "Network request failed"
+
+**症状**：双击启动后窗口停在 "Choose your OpenWhispr setup"（选 Cloud / Local），点 Continue 顶部就一条红色 "Network request failed. Check your connection."，本地完全能上网。
+
+**原因**：`cloud-health-check` IPC 在 `VITE_OPENWHISPR_API_URL` 为空时返回 `{ok:false, messageKey:"...cloudUnreachable.generic"}`，onboarding 把这条当成"云连不上"硬挂掉；而上游的 Better Auth session 因为历史原因残留了 `isSignedIn=true`，触发 cloud reconcile 又再失败一次。
+
+**解法**：本地使用根本不需要走 cloud，所以在项目根 `.env` 里加一行：
+
+```env
+OPENWHISPR_SKIP_ONBOARDING=1
+```
+
+然后重建渲染层（**重要，flag 是编译期注入的，必须重建才生效**）：
+
+```cmd
+npm run build:renderer
+start-fast.bat
+```
+
+打开后直接就是 Control Panel，不走任何 onboarding、不弹 "Network request failed"。如果之前手贱点过 Continue 留下了脏 session，先把下面的文件清掉再启动：
+
+```cmd
+del /q /f "%APPDATA%\OpenWhispr-development\account-scope-binding.json" "%APPDATA%\OpenWhispr-development\auth-token.bin" "%APPDATA%\OpenWhispr-development\Local State"
+rmdir /s /q "%APPDATA%\OpenWhispr-development\Local Storage" "%APPDATA%\OpenWhispr-development\Session Storage"
+```
+
+想恢复 onboarding 把那一行的 `=1` 改成空、`npm run build:renderer` 重建即可。
+
 ---
 
 ## 模型选择

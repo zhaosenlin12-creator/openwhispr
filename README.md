@@ -27,6 +27,36 @@
 
 ---
 
+## 本地运行（Windows · 中文）
+
+> 这是基于 [OpenWhispr/openwhispr](https://github.com/OpenWhispr/openwhispr) 的本地化 fork：默认走本地 Whisper，不走 OpenWhispr Cloud、不用登录、不用注册。F8 按住说话，文字直接落到当前光标位置。
+
+完整中文教程（含环境要求 / 安装步骤 / 日常使用 / 踩坑速查）见：[WINDOWS-LOCAL-CN.md](./WINDOWS-LOCAL-CN.md)
+
+**TL;DR（5 分钟跑起来）：**
+
+```cmd
+git clone https://github.com/zhaosenlin12-creator/openwhispr.git
+cd openwhispr
+npm install
+copy .env.example .env       :: Windows cmd
+:: 然后在 .env 末尾加一行：OPENWHISPR_SKIP_ONBOARDING=1
+npm run build:renderer
+start-fast.bat
+```
+
+看到 Control Panel 窗口后，按住 **F8** 说话，松开自动写入。
+
+**必看踩坑（5 条精选，全部 11 条见 WINDOWS-LOCAL-CN.md）：**
+
+1. 热键不要用 `Ctrl+Alt+Space`，跟微信语音冲突；默认已经改成 `F8`。
+2. 国内网络把 `huggingface.co` 换 `hf-mirror.com`（仓库已经改好）。
+3. 没装 VS 2022 Build Tools 的，先装 "使用 C++ 的桌面开发" 工作负载，否则 node-gyp 编译 native 模块直接挂。
+4. 别用 `start.bat` 日常使用，那条路径要 1-2 分钟；用 `start-fast.bat`（5-8 秒）。
+5. 启动后卡在 "Choose your OpenWhispr setup" + 顶部红条 "Network request failed" → `.env` 加 `OPENWHISPR_SKIP_ONBOARDING=1` 然后 `npm run build:renderer` 重建。
+
+---
+
 OpenWhispr turns your voice into text, notes, and actions from your desktop. Press a hotkey, speak, and your words appear at your cursor. Choose between fully private offline transcription with local speech-to-text models like Orukeet, Whisper, NVIDIA Parakeet, and Cohere Transcribe — where your audio never leaves your device — or cloud processing for speed. No data collection, no telemetry, fully open source.
 
 ## Download

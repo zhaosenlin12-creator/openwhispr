@@ -269,6 +269,16 @@ rmdir /s /q "%APPDATA%\OpenWhispr-development\Local Storage" "%APPDATA%\OpenWhis
 
 想恢复 onboarding 把那一行的 `=1` 改成空、`npm run build:renderer` 重建即可。
 
+### 12. F8 按住说话后历史里全是 "Transcription failed: OpenWhispr API URL not configured"
+
+**症状**：F8 按住说话能录音,松开后历史里出现 "Transcription failed",错误是 "OpenWhispr API URL not configured"。窗口本身没红条,只是录音条目失败。
+
+**原因**：`.env` 里 `LOCAL_TRANSCRIPTION_PROVIDER=whisper` 只是告诉 sttpt 用哪个本地引擎,**不会**自动把"走本地"这个开关打开。`useLocalWhisper`(在 settings store 里、默认 `false`)才是 audioManager 真正看的路由决策。`.env` 配得再本地,这个开关是 `false` 的话,dictation 还是会走 `cloudTranscribe` IPC,IPC 那边 `VITE_OPENWHISPR_API_URL` 是空的就抛 "API URL not configured"。
+
+**解法**：仓库 `settingsStore.ts` 的 `initializeSettings` 现在带了 bootstrap:只要 `OPENWHISPR_SKIP_ONBOARDING=1` 编译期被注入,渲染层启动时如果发现用户从没碰过 `useLocalWhisper` toggle,**自动**把它设成 `true` 一次并写入 localStorage。所以你不用手动进设置,启动一次就行。
+
+但前提是 `OPENWHISPR_SKIP_ONBOARDING=1` 必须在 `.env` 里(本地使用 99% 情况都该有),并且 `npm run build:renderer` 跑过把这个 flag 烤进 dist(它是编译期注入的)。如果 bootstrap 没生效,99% 是因为:`OPENWHISPR_SKIP_ONBOARDING=` 是空的、或者没重建、或者 leveldb 里残留了 `useLocalWhisper=false` 把首次启动覆盖掉了(把这条清掉重启就行)。
+
 ---
 
 ## 模型选择

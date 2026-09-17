@@ -347,17 +347,28 @@ const clampVadValue = (key: WhisperVadKey, raw: unknown): number => {
 const LANGUAGE_MIGRATIONS: Record<string, string> = {
   zh: "zh-CN",
   // Local-only fork: default "auto" lets whisper.cpp mis-classify zh-CN
-  // speech as Japanese (e.g. "以上就是了" -> "以上就是了よ"). New and
+  // speech as Japanese (e.g. "以上的事了" -> "以上的事了よ"). New and
   // migrating users get the explicit base code instead, which makes the
   // pre-warm command line "--language zh" rather than "--language auto".
   auto: "zh-CN",
 };
 
+// Local-only fork: ggml-base is too noisy on Chinese and weak on English.
+// Bump any stored "base" up to "small" so existing installs switch models
+// on the next launch without losing the user's other settings.
+const WHISPER_MODEL_MIGRATIONS: Record<string, string> = {
+  base: "small",
+};
+
 function migratePreferredLanguage() {
   if (!isBrowser) return;
-  const stored = localStorage.getItem("preferredLanguage");
-  if (stored && LANGUAGE_MIGRATIONS[stored]) {
-    localStorage.setItem("preferredLanguage", LANGUAGE_MIGRATIONS[stored]);
+  const langStored = localStorage.getItem("preferredLanguage");
+  if (langStored && LANGUAGE_MIGRATIONS[langStored]) {
+    localStorage.setItem("preferredLanguage", LANGUAGE_MIGRATIONS[langStored]);
+  }
+  const modelStored = localStorage.getItem("whisperModel");
+  if (modelStored && WHISPER_MODEL_MIGRATIONS[modelStored]) {
+    localStorage.setItem("whisperModel", WHISPER_MODEL_MIGRATIONS[modelStored]);
   }
 }
 
@@ -1472,7 +1483,11 @@ export const useSettingsStore = create<SettingsState>()((set, get) => ({
     isBrowser ? localStorage.getItem("uiLanguage") || i18n.language : null
   ),
   useLocalWhisper: readBoolean("useLocalWhisper", false),
-  whisperModel: readString("whisperModel", "base"),
+  // Local-only fork default: small (~466 MB) is materially more accurate on
+  // Chinese + English mixed speech than base (~147 MB). Migrate any stored
+  // "base" to "small" so existing users pick up the better model on the
+  // next launch.
+  whisperModel: readString("whisperModel", "small"),
   localTranscriptionProvider: readLocalProvider("localTranscriptionProvider"),
   parakeetModel: readString("parakeetModel", ""),
   cohereModel: readString("cohereModel", DEFAULT_COHERE_MODEL),

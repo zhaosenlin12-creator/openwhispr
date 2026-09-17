@@ -148,6 +148,17 @@ function getGpuSignature(options = {}) {
   return `gpu:vulkan:${Number.isInteger(deviceIndex) && deviceIndex >= 0 ? deviceIndex : "default"}`;
 }
 
+// Pin the language into the server signature. whisper.cpp v1.9.x auto-detect
+// mis-classifies short zh-CN clips as ja (e.g. "以上就是了" -> "以上就是了よ"),
+// so when the user picks a base language we MUST restart the server with
+// --language <code> instead of letting the running process keep --language
+// auto. null and empty string both mean "auto" so they hash the same.
+function getLanguageSignature(options = {}) {
+  const lang = options.language;
+  if (!lang) return "lang:auto";
+  return `lang:${lang}`;
+}
+
 function buildWhisperServerArgs({
   modelPath,
   port,
@@ -303,6 +314,7 @@ class WhisperServerManager extends EventEmitter {
     this.vadSignature = "vad:off";
     this.threadSignature = "threads:default";
     this.gpuSignature = "gpu:cpu";
+    this.languageSignature = "lang:auto";
     this.gpuFallbackActive = false;
     this.lastStartOptions = {};
   }
@@ -511,6 +523,7 @@ class WhisperServerManager extends EventEmitter {
     const nextThreadSignature = getThreadSignature(threadResolution);
     const nextVadSignature = getVadSignature(options);
     const nextGpuSignature = getGpuSignature(options);
+    const nextLanguageSignature = getLanguageSignature(options);
     // gpuFallbackActive pins a fallback session to its working CPU server:
     // after a CUDA crash the next request can resolve to a different backend
     // (an installed Vulkan pack, since only the crashed backend is recorded in
@@ -523,6 +536,7 @@ class WhisperServerManager extends EventEmitter {
       !this.isRemote &&
       this.vadSignature === nextVadSignature &&
       this.threadSignature === nextThreadSignature &&
+      this.languageSignature === nextLanguageSignature &&
       (this.gpuSignature === nextGpuSignature || this.gpuFallbackActive)
     ) {
       return;
@@ -536,6 +550,7 @@ class WhisperServerManager extends EventEmitter {
     this.hostname = "127.0.0.1";
     this.vadSignature = nextVadSignature;
     this.threadSignature = nextThreadSignature;
+    this.languageSignature = nextLanguageSignature;
     this.startupPromise = this._doStart(modelPath, { ...options, threadResolution });
     try {
       await this.startupPromise;
@@ -1198,6 +1213,7 @@ module.exports.parseVulkanDevices = parseVulkanDevices;
 module.exports.resolveVulkanPinAction = resolveVulkanPinAction;
 module.exports.getVadSignature = getVadSignature;
 module.exports.getGpuSignature = getGpuSignature;
+module.exports.getLanguageSignature = getLanguageSignature;
 module.exports.resolveWhisperThreads = resolveWhisperThreads;
 module.exports.shouldFallbackToCpuAfterRequestError = shouldFallbackToCpuAfterRequestError;
 module.exports.shouldRetryAfterServerReplaced = shouldRetryAfterServerReplaced;

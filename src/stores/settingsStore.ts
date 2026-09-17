@@ -344,7 +344,14 @@ const clampVadValue = (key: WhisperVadKey, raw: unknown): number => {
   return round ? Math.round(clamped) : clamped;
 };
 
-const LANGUAGE_MIGRATIONS: Record<string, string> = { zh: "zh-CN" };
+const LANGUAGE_MIGRATIONS: Record<string, string> = {
+  zh: "zh-CN",
+  // Local-only fork: default "auto" lets whisper.cpp mis-classify zh-CN
+  // speech as Japanese (e.g. "以上就是了" -> "以上就是了よ"). New and
+  // migrating users get the explicit base code instead, which makes the
+  // pre-warm command line "--language zh" rather than "--language auto".
+  auto: "zh-CN",
+};
 
 function migratePreferredLanguage() {
   if (!isBrowser) return;
@@ -1472,7 +1479,11 @@ export const useSettingsStore = create<SettingsState>()((set, get) => ({
   allowOpenAIFallback: readBoolean("allowOpenAIFallback", false),
   allowLocalFallback: readBoolean("allowLocalFallback", false),
   fallbackWhisperModel: readString("fallbackWhisperModel", "base"),
-  preferredLanguage: readString("preferredLanguage", "auto"),
+  // Local-only fork defaults to zh-CN: whisper.cpp v1.9.x auto-detect
+  // mis-classifies short Chinese clips as Japanese (e.g. "以上就是了" ->
+  // "以上就是了よ"). The migration above also rewrites a stored "auto" to
+  // "zh-CN", so users on the previous default pick up the same fix.
+  preferredLanguage: readString("preferredLanguage", "zh-CN"),
   chineseScriptPreference: normalizeChineseScriptPreference(
     readString("chineseScriptPreference", "as-transcribed")
   ),

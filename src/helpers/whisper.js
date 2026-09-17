@@ -87,6 +87,16 @@ class WhisperManager {
   // when the server falls back to CPU); they stay off until the user retries
   // or re-downloads, so a doomed backend isn't re-attempted — and its model
   // reload re-paid — on every launch.
+  // Normalize a DICTATION_LANGUAGE / preferredLanguage value into the base
+  // code that whisper.cpp accepts on the command line. "zh-CN" -> "zh",
+  // "auto" / null / undefined -> null (whisper-server keeps --language auto
+  // and falls back to its own auto-detection). Mirrors getBaseLanguageCode
+  // in src/utils/languageSupport.ts without crossing the TS/JS boundary.
+  _resolveBaseLanguage(language) {
+    if (!language || language === "auto") return null;
+    return language.split("-")[0];
+  }
+
   resolveGpuStartOptions() {
     const failed = resolveFailedGpuBackends(process.env.WHISPER_GPU_FAILED);
     const useCuda =
@@ -162,8 +172,12 @@ class WhisperManager {
       await cleanupStaleDownloads(this.getModelsDir());
 
       // Pre-warm whisper-server if local mode enabled (eliminates 2-5s cold-start delay)
-      const { localTranscriptionProvider, whisperModel } = settings;
+      const { localTranscriptionProvider, whisperModel, language } = settings;
       const { useCuda, useVulkan } = this.resolveGpuStartOptions();
+      // Normalize locale ("zh-CN" -> "zh") and pass to the pre-warm so the
+      // server starts with --language <code> rather than --language auto,
+      // which mis-classifies short zh-CN clips as ja. See pitfall #14.
+      const prewarmLanguage = this._resolveBaseLanguage(language);
 
       if (
         localTranscriptionProvider === "whisper" &&
@@ -178,11 +192,16 @@ class WhisperManager {
             modelPath,
             cuda: useCuda,
             vulkan: useVulkan,
+            language: prewarmLanguage || "auto",
           });
 
           try {
             const serverStartTime = Date.now();
-            await this.serverManager.start(modelPath, { useCuda, useVulkan });
+            await this.serverManager.start(modelPath, {
+              useCuda,
+              useVulkan,
+              language: prewarmLanguage,
+            });
             this.currentServerModel = whisperModel;
 
             debugLogger.info("whisper-server pre-warmed successfully", {
@@ -427,11 +446,19 @@ class WhisperManager {
       debugLogger.warn("VAD requested but ggml-silero model not found; running without VAD");
     }
 
+    // Pass the resolved language to whisper-server so its command-line
+      // --language flag matches the per-request body. Auto-detection on the
+      // server process picks the wrong base language for short zh-CN clips
+      // (whisper.cpp v1.9.x often falls back to ja when given mixed kanji),
+      // which is what produced "以上就是了よ" instead of clean simplified
+      // Chinese. Empty / "auto" stays auto so callers who have not picked a
+      // language still get detection.
     await this.serverManager.start(modelPath, {
       ...this.resolveGpuStartOptions(),
       vadEnabled,
       vadModelPath,
       vadConfig: options.vadConfig || null,
+      language: language || null,
     });
     this.currentServerModel = model;
 

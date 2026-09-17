@@ -1239,6 +1239,10 @@ async function startApp() {
   const whisperSettings = {
     localTranscriptionProvider: process.env.LOCAL_TRANSCRIPTION_PROVIDER || "",
     whisperModel: process.env.LOCAL_WHISPER_MODEL,
+    // Forward the user's dictation language so the pre-warm command line is
+    // "--language zh" (etc.) instead of the default --language auto, which
+    // mis-classifies short zh-CN clips as ja. See pitfall #14.
+    language: process.env.DICTATION_LANGUAGE,
   };
   whisperManager.initializeAtStartup(whisperSettings).catch((err) => {
     debugLogger.debug("Whisper startup init error (non-fatal)", { error: err.message });

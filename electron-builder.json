@@ -139,6 +139,14 @@
       ]
     },
     {
+      "from": "resources/bin/windows-key-listener.exe",
+      "to": "bin/windows-key-listener.exe"
+    },
+    {
+      "from": "resources/bin/windows-text-monitor.exe",
+      "to": "bin/windows-text-monitor.exe"
+    },
+    {
       "from": "resources/mediaremote-adapter/bin/mediaremote-adapter.pl",
       "to": "bin/mediaremote-adapter.pl"
     },

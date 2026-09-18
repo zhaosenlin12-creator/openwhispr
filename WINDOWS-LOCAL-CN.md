@@ -316,8 +316,37 @@ Get-CimInstance Win32_Process |
 
 **多语种怎么开**:whisper-server 一次只支持一种 base language。如果你要中英混说、或者今天中文明天英文,在 Settings → 语言 → "转写语言"里选 `自动检测`(`auto`),代价就是上面这条短句误识别;不混语种就保持 `中文`(`zh-CN`)。要在 UI 之外改,直接编辑 `%APPDATA%\OpenWhispr-development\.env` 的 `DICTATION_LANGUAGE=zh-CN`,然后 `stop.bat` 重启。
 
----
+### 15. 打包后 F8 完全没反应，dist\win-unpacked\resources\bin 里少了 windows-key-listener.exe / windows-text-monitor.exe
 
+**症状**：跑 `electron-builder --win --dir` 重打绿色版 `dist\win-unpacked\OpenWhispr.exe` 后双击启动，按 F8 完全没反应。日志里搜不到 `KEY_DOWN` / `KEY_UP`，只剩 `Hotkey "F8" registered from env`，但 `Native key listener ready and listening` 这条永远不会打。`dist\win-unpacked\resources\bin\` 目录下 `windows-fast-paste.exe` 在，但 `windows-key-listener.exe` 和 `windows-text-monitor.exe` 没了。
+
+**原因**：`electron-builder.json` 的 `extraResources` filter 用 micromatch glob 匹配，写法是：
+
+```
+"windows-key-listener*",
+"windows-text-monitor*",
+"windows-fast-paste*",
+```
+
+三个 glob 看起来一样，但实测在这台机器上 `windows-fast-paste*` 能匹配、`windows-key-listener*` 和 `windows-text-monitor*` 匹配不到 `windows-key-listener.exe` / `windows-text-monitor.exe`，被滤掉了。原因跟 micromatch 的 basename 解析或内部 path normalization 有关——没深究，但表现稳定可复现，每次重打都丢。
+
+**解法**：在 `electron-builder.json` 的 `extraResources` 数组里追加两条不带 filter 的显式 per-file 条目（本仓库当前文件 line 142-148 就是这样写的），glob 完全绕开。下次重打这俩 exe 会老老实实拷进去。
+
+如果已经打了包但不想再重打，先手动补一次应急：
+
+```powershell
+$bin = "D:\kaifa_stu\gpt6\openwhispr\dist\win-unpacked\resources\bin"
+Copy-Item "D:\kaifa_stu\gpt6\openwhispr\resources\bin\windows-key-listener.exe" "$bin\windows-key-listener.exe" -Force
+Copy-Item "D:\kaifa_stu\gpt6\openwhispr\resources\bin\windows-text-monitor.exe" "$bin\windows-text-monitor.exe" -Force
+```
+
+然后重启 `dist\win-unpacked\OpenWhispr.exe`，F8 就回来了。
+
+**自查**：
+1. 启动后看 `%APPDATA%\open-whispr\logs\debug-*.log`，搜 `Native key listener ready and listening`。没有 = 二进制缺失。
+2. `Get-ChildItem dist\win-unpacked\resources\bin\windows-*.exe`，必须三个都在。
+
+---
 ## 模型选择
 
 | 模型 | 大小 | 中文 | 英文 | 速度 | 适用场景 |
